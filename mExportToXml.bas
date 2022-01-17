@@ -9,7 +9,7 @@ End Sub
 Sub BeginXmlConversion(Optional tblHeaders As String = vbNullString, Optional tblData As String = vbNullString)
     On Error GoTo Error_Handle
     If tblHeaders = vbNullString Then: tblHeaders = "SourceData[#Headers]" 'Replace With TableName Target Table Name e.g., Table1
-    If tblData = vbNullString Then: tblData = "SourceData[#All]" ''Replace With TableName Target Table Name e.g., Table1
+    If tblData = vbNullString Then: tblData = "SourceData[#All]" 'Replace With TableName Target Table Name e.g., Table1
 
     filepath = ActiveWorkbook.Path & "\" 'Change Path Here
     filename = "SourceData.xml" 'Change filename here
