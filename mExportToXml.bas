@@ -3,7 +3,7 @@ Attribute VB_Name = "mExportToXml"
 Private filename As String
 Private filepath As String
 Private xmlStr As String
-Sub b()
+Sub ExportData() 'Use to call from Button
     Call BeginXmlConversion
 End Sub
 Sub BeginXmlConversion(Optional tblHeaders As String = vbNullString, Optional tblData As String = vbNullString)
