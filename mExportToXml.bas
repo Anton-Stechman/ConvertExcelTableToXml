@@ -1,18 +1,25 @@
-Attribute VB_Name = "mExportToXml"
+'GitHub Repository: https://github.com/Anton-Stechman/ConvertExcelTableToXml
 'VBA for Excel - Convert a Table into an xml file
+
 Private filename As String
 Private filepath As String
 Private xmlStr As String
-Sub ExportData() 'Use to call from Button
-    Call BeginXmlConversion
+
+Sub RunXmlExport() 'Can be called from Button
+	call XmlExportMain() 
 End Sub
-Sub BeginXmlConversion(Optional tblHeaders As String = vbNullString, Optional tblData As String = vbNullString)
+
+Sub XmlExportMain(Optional tblHeaders As String = vbNullString, Optional tblData As String = vbNullString)
     On Error GoTo Error_Handle
-    If tblHeaders = vbNullString Then: tblHeaders = "SourceData[#Headers]" 'Replace With TableName Target Table Name e.g., Table1
-    If tblData = vbNullString Then: tblData = "SourceData[#All]" 'Replace With TableName Target Table Name e.g., Table1
+    
+    'Replace "TableName[#Headers]" With The Name of The Table You're Targeting e.g., Table1; Can Also be a range e.g., "$A$1:$Z$1"
+    If tblHeaders = vbNullString Then: tblHeaders = "TableName[#Headers]" 
+        
+    'Replace "TableName[#All]" With The Name of The Table You're Targeting e.g., Table1; Can Also be a range e.g., "$A$2:$Z$100"    
+    If tblData = vbNullString Then: tblData = "TableName[#All]"
 
     filepath = ActiveWorkbook.Path & "\" 'Change Path Here
-    filename = "SourceData.xml" 'Change filename here
+    filename = "xmlExportData.xml" 'Change filename here
 
     Call OptimiseVBA
     Call MsgBox("Exporting Data to xml..." & vbNewLine & "Click 'Ok' To Continue", vbOKOnly, "Begin xml Conversion")
@@ -71,6 +78,7 @@ Private Sub CreateNewXml(contents As String)
     Set objStream = CreateObject("ADODB.Stream")
     objStream.Charset = "UTF-8"
     objStream.Open
+    if Right(filename,4) <> ".xml" then: filename = filename & ".xml"  
     Call objStream.WriteText(contents)
     Call objStream.SaveToFile(filepath & filename, 2)
     objStream.Close
@@ -83,6 +91,9 @@ Private Function ReplaceChar(str As String) As String
     For i = 58 To 64
         ReplaceChar = Replace(ReplaceChar, Chr$(i), vbNullString)
     Next i
+                        
+    'xml Headers cannot start with a numerical value, the below will add a "n" or char of your choice _ 
+    'as a prefix to any headers that start with a numerical value
     If IsNumeric(Left(ReplaceChar, 1)) = True Then
         ReplaceChar = "n" & ReplaceChar
     End If
