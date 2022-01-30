@@ -1,26 +1,34 @@
 'GitHub Repository: https://github.com/Anton-Stechman/ConvertExcelTableToXml
 'VBA for Excel - Convert a Table into an xml file
-
 Private filename As String
 Private filepath As String
 Private xmlStr As String
 
 Sub RunXmlExport() 'Can be called from Button
-	call XmlExportMain() 
+    Call Main
 End Sub
 
-Sub XmlExportMain(Optional tblHeaders As String = vbNullString, Optional tblData As String = vbNullString)
+Sub ExportData(Optional CustomPath As String = vbNullString, Optional CustomFile As String = vbNullString, _
+Optional DataRange As String = vbNullString, Optional HeadRange As String = vbNullString)
+    If CustomPath <> vbNullString Then: filepath = CustomPath
+    If CustomFile <> vbNullString Then: filename = CustomFile
+    If DataRange = vbNullString Then: DataRange = "SourceData[#All]"
+    If HeadRange = vbNullString Then: HeadRange = "SourceData[#Headers]"
+    Call Main(tblHeaders:=HeadRange, tblData:=DataRange)
+End Sub
+								
+Sub Main(Optional tblHeaders As String = vbNullString, Optional tblData As String = vbNullString)
     On Error GoTo Error_Handle
+    If tblHeaders = vbNullString Then: tblHeaders = "SourceData[#Headers]" 'Replace With TableName Target Table Name e.g., Table1
+    If tblData = vbNullString Then: tblData = "SourceData[#All]" 'Replace With TableName Target Table Name e.g., Table1
+
+    If filepath = vbNullString Then: filepath = ActiveWorkbook.Path & "\Data\" 'Change Path Here
+    If DirExists(filepath) = False Then: MkDir (filepath)
+    If filename = vbNullString Then
+        Dim DateVal As String: DateVal = Format(Now, "YYYY-MM")
+        filename = DateVal & "_MBM_SourceData.xml" 'Change filename here
+    End If
     
-    'Replace "TableName[#Headers]" With The Name of The Table You're Targeting e.g., Table1; Can Also be a range e.g., "$A$1:$Z$1"
-    If tblHeaders = vbNullString Then: tblHeaders = "TableName[#Headers]" 
-        
-    'Replace "TableName[#All]" With The Name of The Table You're Targeting e.g., Table1; Can Also be a range e.g., "$A$2:$Z$100"    
-    If tblData = vbNullString Then: tblData = "TableName[#All]"
-
-    filepath = ActiveWorkbook.Path & "\" 'Change Path Here
-    filename = "xmlExportData.xml" 'Change filename here
-
     Call OptimiseVBA
     Call MsgBox("Exporting Data to xml..." & vbNewLine & "Click 'Ok' To Continue", vbOKOnly, "Begin xml Conversion")
     xmlStr = FormatForXml(HeaderRow:=Range(tblHeaders), TableRange:=Range(tblData))
@@ -63,6 +71,7 @@ Private Function FormatForXml(Optional HeaderRow As Range, Optional TableRange A
     
     'Close off xml formatting
     str = str & "</SourceDataTable>" & vbNewLine
+    str = Replace(str, "_>", ">")
     Debug.Print (str)
     FormatForXml = str
 End Function
@@ -78,25 +87,25 @@ Private Sub CreateNewXml(contents As String)
     Set objStream = CreateObject("ADODB.Stream")
     objStream.Charset = "UTF-8"
     objStream.Open
-    if Right(filename,4) <> ".xml" then: filename = filename & ".xml"  
     Call objStream.WriteText(contents)
     Call objStream.SaveToFile(filepath & filename, 2)
     objStream.Close
 End Sub
 Private Function ReplaceChar(str As String) As String
-    ReplaceChar = Replace(str, " ", vbNullString)
+    ReplaceChar = Replace(str, " ", "_")
+    ReplaceChar = Replace(ReplaceChar, ".000", vbNullString)
     For i = 1 To 47
         ReplaceChar = Replace(ReplaceChar, Chr$(i), vbNullString)
     Next i
     For i = 58 To 64
         ReplaceChar = Replace(ReplaceChar, Chr$(i), vbNullString)
     Next i
-                        
-    'xml Headers cannot start with a numerical value, the below will add a "n" or char of your choice _ 
-    'as a prefix to any headers that start with a numerical value
     If IsNumeric(Left(ReplaceChar, 1)) = True Then
         ReplaceChar = "n" & ReplaceChar
     End If
 End Function
-
+Private Function DirExists(Optional dirStr As String)
+    If dirStr = vbNullString Then: dirstring = filepath & "\Data\"
+    DirExists = Dir(dirStr, vbDirectory) <> vbNullString
+End Function
 
