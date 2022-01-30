@@ -11,7 +11,8 @@ End Sub
 Sub ExportData(Optional CustomPath As String = vbNullString, Optional CustomFile As String = vbNullString, _
 Optional DataRange As String = vbNullString, Optional HeadRange As String = vbNullString)
     	If CustomPath <> vbNullString Then: filepath = CustomPath
-	If CustomFile <> vbNullString Then: filename = CustomFile If DataRange = vbNullString Then: DataRange = "SourceData[#All]"  'Replace With TableName Target Table Name e.g., Table1
+	If CustomFile <> vbNullString Then: filename = CustomFile 
+	If DataRange = vbNullString Then: DataRange = "SourceData[#All]"  'Replace With TableName Target Table Name e.g., Table1
 	If HeadRange = vbNullString Then: HeadRange = "SourceData[#Headers]" 'Replace With TableName Target Table Name e.g., Table1
     	Call Main(tblHeaders:=HeadRange, tblData:=DataRange)
 End Sub
