@@ -6,7 +6,8 @@ VBA script to export either an Excel Table or an Excel Range to an xml file
 How it works:
   the script loops the row count of the set data range (for i = 0 to data.rows.count-1)
   next it then loops through all the headers (for each h in HeaderRange) 
-  from here it uses an offset from the each header using the value i to get the resut = "<" headername ">" & h.offset(i,0).value & "</" headername ">"
+  from here it uses an offset from the each header using the value i to get the 
+  resut = "<" headername ">" & h.offset(i,0).value & "</" headername ">"
   
   this way the loop takes each value in a row and assigns it to it's header, all of this is stored as a string value then written to an xml file upon completion
   The script is more or less "plug-and-play" and only requires minimal editing to work for any specific workbook.
