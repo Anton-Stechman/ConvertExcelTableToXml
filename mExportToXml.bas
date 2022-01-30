@@ -45,7 +45,7 @@ Private Sub MainLoop(Optional tblHeaders As String = vbNullString, Optional tblD
 Error_Handle:
     Call MsgBox("An Error Occured!" & vbNewLine & "Error Number:" & Space(1) & _
     Err.Number & vbNewLine & "Description:" & Space(1) & Err.Description & _
-    IIf(CurAddrs = vbNullString, vbNewLine & "Error in Cell:" _
+    IIf(CurAddrs <> vbNullString, vbNewLine & "Error in Cell:" _
     & Space(1) & CurAddrs, vbNullString), vbOKOnly, "Error!")
     Call OptimiseVBA(True)
 End Sub
