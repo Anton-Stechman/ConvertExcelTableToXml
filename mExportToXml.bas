@@ -5,22 +5,20 @@ Private filepath As String
 Private xmlStr As String
 
 Sub RunXmlExport() 'Can be called from Button
-    Call Main
+	Call ExportData()
 End Sub
 
 Sub ExportData(Optional CustomPath As String = vbNullString, Optional CustomFile As String = vbNullString, _
 Optional DataRange As String = vbNullString, Optional HeadRange As String = vbNullString)
     If CustomPath <> vbNullString Then: filepath = CustomPath
     If CustomFile <> vbNullString Then: filename = CustomFile
-    If DataRange = vbNullString Then: DataRange = "SourceData[#All]"
-    If HeadRange = vbNullString Then: HeadRange = "SourceData[#Headers]"
+			If DataRange = vbNullString Then: DataRange = "SourceData[#All]"  'Replace With TableName Target Table Name e.g., Table1
+				If HeadRange = vbNullString Then: HeadRange = "SourceData[#Headers]" 'Replace With TableName Target Table Name e.g., Table1
     Call Main(tblHeaders:=HeadRange, tblData:=DataRange)
 End Sub
 								
 Sub Main(Optional tblHeaders As String = vbNullString, Optional tblData As String = vbNullString)
     On Error GoTo Error_Handle
-    If tblHeaders = vbNullString Then: tblHeaders = "SourceData[#Headers]" 'Replace With TableName Target Table Name e.g., Table1
-    If tblData = vbNullString Then: tblData = "SourceData[#All]" 'Replace With TableName Target Table Name e.g., Table1
 
     If filepath = vbNullString Then: filepath = ActiveWorkbook.Path & "\Data\" 'Change Path Here
     If DirExists(filepath) = False Then: MkDir (filepath)
