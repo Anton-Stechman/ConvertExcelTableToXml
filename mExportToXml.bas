@@ -26,7 +26,7 @@ Sub Main(Optional tblHeaders As String = vbNullString, Optional tblData As Strin
     If DirExists(filepath) = False Then: MkDir (filepath)
     If filename = vbNullString Then
         Dim DateVal As String: DateVal = Format(Now, "YYYY-MM")
-        filename = DateVal & "_MBM_SourceData.xml" 'Change filename here
+	filename = DateVal & "NewXmlExport.xml" 'Change filename here
     End If
     
     Call OptimiseVBA
