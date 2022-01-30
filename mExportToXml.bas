@@ -59,17 +59,13 @@ Private Function FormatForXml(Optional HeaderRow As Range, Optional TableRange A
     'Initiate xml Format
     str = "<?xml version=" & Q & "1.0" & Q & Space(1) & "encoding=" & Q & "UTF-8" & Q & "?>" & vbNewLine
     str = str & "<SourceDataTable>" & vbNewLine
-    Dim BlankFieldCount As Integer
 										
     'Format Input Table for xml
     For i = 1 To TableRange.Rows.Count
         str = str & vbTab & "<SourceData>" & vbNewLine
         For Each h In HeaderRow
             Dim newHeader: newHeader = ReplaceChar(CStr(h.Value))
-            If newHeader = vbNullString Then
-                newHeader = blank_field & "_" & BlankFieldCount
-                BlankFieldCount = BlankFieldCount + 1
-            End If
+            If newHeader = vbNullString Then: newHeader = "blank_field_Col" & h.Column
             With h.Offset(i, 0)
                 CurAddrs = .Address
                 If IsEmpty(.Value) Then: v = "null": Else v = .Value
