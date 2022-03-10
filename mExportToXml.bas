@@ -29,7 +29,7 @@ End Sub
 Private Sub MainLoop(Optional tblHeaders As String = vbNullString, Optional tblData As String = vbNullString)
     'On Error GoTo Error_Handle
     filepath = Range("TargetPath").Value 'Can Change Path Here
-    filename = Range("SEASON").Value & Range("PLANT").Value & ".xml"
+    filename = "ExportFileName_or_CellReferenceHere" & ".xml"
     If filepath = vbNullString Then: filepath = Application.Path
     If Right(filepath, 1) <> PathDelim Then: filepath = filepath & PathDelim
     If DirExists(filepath) = False Then: MkDir (filepath)
