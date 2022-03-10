@@ -155,6 +155,11 @@ Private Sub OptimiseVBA(Optional switch As Boolean = False)
     Application.Calculation = calcsettings
 End Sub
 
+'This function is a workaround for a bug - it was noted when the new data was apended to an existing file 
+'it would also generate illegal Characters at random, in all cases these would make up the first 2 - 10 chars of the string used to generate the xml file
+'to account for this, the below function takes the xml string as an input, loops the first 50 chars OR until the first '<' is reached 
+'and replaces any characetrs that are not '<' with a vbNullString then returns a modified string value after this process to then be written to xml
+                                                
 Private Function FixText(str As String) As String
     If Left(str, 1) = "<" Then: FixText = str: Exit Function
     
