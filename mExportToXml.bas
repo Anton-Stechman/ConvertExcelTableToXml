@@ -1,13 +1,11 @@
-'GitHub Repository: https://github.com/Anton-Stechman/ConvertExcelTableToXml
-'VBA for Excel - Convert a Table into an xml file
-'Version 0.2.0
-
+Attribute VB_Name = "mExportToxml"
 Private filename As String
 Private filepath As String
 Private xmlStr As String
 Private HideFile As Boolean
 Private CurAddrs As String
 Private NoCellErrors As Boolean
+Private PathDelim As String
 
 'Initial Macro - Call From a Button
 Sub RunXmlExport()
@@ -20,26 +18,48 @@ Private Sub BeginMainLoop(Optional CustomPath As String = vbNullString, Optional
 Optional DataRange As String = vbNullString, Optional HeadRange As String = vbNullString)
     If CustomPath <> vbNullString Then: filepath = CustomPath
     If CustomFile <> vbNullString Then: filename = CustomFile
-    If DataRange = vbNullString Then: DataRange = "TableName[#All]" 'Replace With TableName Target Table Name e.g., Table1[#All]
-    If HeadRange = vbNullString Then: HeadRange = "TableName[#Headers]" 'Replace With TableName Target Table Name e.g., Table1[#Headers]
+    If DataRange = vbNullString Then: DataRange = "RawData[#All]" 'Replace With TableName Target Table Name e.g., Table1[#All]
+    If HeadRange = vbNullString Then: HeadRange = "RawData[#Headers]" 'Replace With TableName Target Table Name e.g., Table1[#Headers]
     HideFile = True
+    PathDelim = Application.PathSeparator
     Call MainLoop(tblHeaders:=HeadRange, tblData:=DataRange)
 End Sub
 
 'Main Loop
 Private Sub MainLoop(Optional tblHeaders As String = vbNullString, Optional tblData As String = vbNullString)
-    On Error GoTo Error_Handle
-    If filepath = vbNullString Then: filepath = Range("TargetPath").Value 'Can Change Path Here
-    If Right(filepath, 1) <> "\" Then: filepath = filepath & "\"
+    'On Error GoTo Error_Handle
+    filepath = Range("TargetPath").Value 'Can Change Path Here
+    filename = Range("SEASON").Value & Range("PLANT").Value & ".xml"
+    If filepath = vbNullString Then: filepath = Application.Path
+    If Right(filepath, 1) <> PathDelim Then: filepath = filepath & PathDelim
     If DirExists(filepath) = False Then: MkDir (filepath)
-    If filename = vbNullString Then: DateVal = Format(Now, "YYYY-MM"): filename = DateVal & "_MBM_SourceData.xml" 'Can Change filename here
     Call OptimiseVBA
-    xmlStr = FormatForXml(HeaderRow:=Range(tblHeaders), TableRange:=Range(tblData))
+    If Dir(filepath & filename, vbHidden) <> vbNullString Then
+        Call SetAttr(filepath & filename, vbNormal) 'unhide file
+        'Read from file
+        Dim fso As Object: Set fso = CreateObject("Scripting.FileSystemObject")
+        Dim stream As Variant
+        Dim contents As String
+        
+        Set stream = fso.OpenTextFile(filepath & filename)
+        contents = stream.ReadAll()
+        
+        Call stream.Close
+        xmlStr = Replace(contents, "</SourceDataTable>", "")
+        xmlStr = xmlStr & ExcelDataToXml(HeaderRow:=Range(tblHeaders), TableRange:=Range(tblData))
+        'Call Kill(filepath & filename)
+        'Append to file
+        Debug.Print ("Append")
+    Else
+        Debug.Print ("Create New: " & filepath & filename)
+        'create new file
+        xmlStr = FormatForXml(HeaderRow:=Range(tblHeaders), TableRange:=Range(tblData))
+    End If
+'    Debug.Print (xmlStr)
     Call CreateNewXml(CStr(xmlStr))
     Call SetAttr(filepath & filename, IIf(HideFile = True, vbHidden, vbNormal))
-    Call MsgBox("xml Export Complete!" & vbNewLine & "Press 'Ok' To Finish", vbOKOnly, "Success!")
+'    Call MsgBox("xml Export Complete!" & vbNewLine & "Press 'Ok' To Finish", vbOKOnly, "Success!")
     Call OptimiseVBA(True)
-    Debug.Print (xmlStr)
     Exit Sub
     
 Error_Handle:
@@ -59,9 +79,18 @@ Private Function FormatForXml(Optional HeaderRow As Range, Optional TableRange A
     'Initiate xml Format
     str = "<?xml version=" & Q & "1.0" & Q & Space(1) & "encoding=" & Q & "UTF-8" & Q & "?>" & vbNewLine
     str = str & "<SourceDataTable>" & vbNewLine
-										
+    str = str & ExcelDataToXml(HeaderRow:=HeaderRow, TableRange:=TableRange)
+
+    FormatForXml = str
+    NoCellErrors = True
+End Function
+
+Private Function ExcelDataToXml(Optional HeaderRow As Range, Optional TableRange As Range, Optional MaxIterations As Integer = 1000) As String
+    Dim str As String
+    Dim Q As String: Q = Chr$(34)
+                                        
     'Format Input Table for xml
-    For i = 1 To TableRange.Rows.Count
+    For i = 1 To TableRange.Rows.Count - 1
         str = str & vbTab & "<SourceData>" & vbNewLine
         For Each h In HeaderRow
             Dim newHeader: newHeader = ReplaceChar(CStr(h.Value))
@@ -75,19 +104,18 @@ Private Function FormatForXml(Optional HeaderRow As Range, Optional TableRange A
         str = str & vbTab & "</SourceData>" & vbNewLine
         If i >= MaxIterations Then: Exit For
     Next i
-    
     'Close off xml formatting
     str = str & "</SourceDataTable>" & vbNewLine
     str = Replace(str, "_>", ">")
     str = Replace(str, "<>", "<blank_field>")
     str = Replace(str, "</>", "</blank_field>")
-    FormatForXml = str
-    NoCellErrors = True
+    ExcelDataToXml = str
 End Function
 
 'Generate XML File
 Private Sub CreateNewXml(contents As String)
-    If DirExists(filepath & filename) = False Then: Call SetAttr(filepath & filename, vbNormal)
+    contents = FixText(CStr(contents))
+'    If DirExists(filepath & filename) = False Then: Call SetAttr(filepath & filename, vbNormal)
     Dim objStream
     Set objStream = CreateObject("ADODB.Stream")
     objStream.Charset = "UTF-8"
@@ -114,7 +142,7 @@ End Function
 
 'Check Directory Exists
 Private Function DirExists(Optional dirStr As String)
-    If dirStr = vbNullString Then: dirstring = filepath & "\Data\"
+    If dirStr = vbNullString Then: dirstring = filepath
     DirExists = Dir(dirStr, vbDirectory) <> vbNullString
 End Function
 
@@ -126,3 +154,17 @@ Private Sub OptimiseVBA(Optional switch As Boolean = False)
     Application.EnableEvents = switch
     Application.Calculation = calcsettings
 End Sub
+
+Private Function FixText(str As String) As String
+    If Left(str, 1) = "<" Then: FixText = str: Exit Function
+    
+    newString = str
+    For i = 1 To Len(str)
+        If i > 50 Then: Exit For
+        vchar = Mid(str, i, 1)
+        If vchar = "<" Then: Exit For
+        newString = Replace(newString, vchar, vbNullString)
+    Next i
+    FixText = newString
+End Function
+
